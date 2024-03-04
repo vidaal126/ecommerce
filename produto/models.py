@@ -2,6 +2,7 @@ from django.db import models
 from PIL import Image  # noqa
 import os
 from django.conf import settings
+from django.utils.text import slugify
 
 
 class Produto(models.Model):
@@ -23,6 +24,14 @@ class Produto(models.Model):
         )
     )
 
+    def get_preco_formatado(self):
+        return f'R$ {self.preco_marketing:.2f}'.replace('.', ',')
+    get_preco_formatado.short_description = 'Preço'
+
+    def get_preco_promocional_formatado(self):
+        return f'R$ {self.preco_marketing_promocional:.2f}'.replace('.', ',')
+    get_preco_promocional_formatado.short_description = 'Preço Promo.'
+
     @staticmethod
     def resize_image(img, new_width=800):
         img_full_path = os.path.join(settings.MEDIA_ROOT, img.name)  # noqa
@@ -43,6 +52,10 @@ class Produto(models.Model):
         )
 
     def save(self, *args, **kwargs):
+        if not self.slug:
+            slug = f'{slugify(self.nome)}'
+            self.slug = slug
+
         super().save(*args, **kwargs)
 
         max_image_size = 800
